@@ -24,41 +24,49 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log(socket.id);
 
-    socket.on('user:getid', () => {
-      socket.emit('user:id', socket.id);
-    });
-
     const createRoom = (privateRoom) => {
       const newRoomID = randomUUID();
+      console.log('Called createRoom'+newRoomID);
       game[newRoomID] = {
-        'players': [{
-          'playerID': socket.id,
-          'option': 'r',
-          'optionLock': false,
-        }],
+        'players': [],
         'vacent': true,
         'private': privateRoom,
       };
       return newRoomID;
     }
 
-    socket.on('room:join', (cb) => {
+    socket.on('room:get', (cb) => {
+      let roomFound = false;
       Object.keys(game).forEach(key => {
-        if (!game[key].private && game[key].vacent) {
-          game[key].vacent = false;
-          const playerDetails = {
-            'playerID': socket.id,
-            'option': 'r',
-            'optionLock': false,
+        if (!game[key]['private'] && game[key]['vacent']) {
+          if (game[key]['players'].length > 0) {
+            game[key]['vacent'] = false;
           }
-          game[key].players.push(playerDetails);
-          socket.join(key);
+          roomFound = true;
           cb(key);
           return;
         }
-      })
-      const newRoomID = createRoom(false); //Bool for private rooms
-      cb(newRoomID);
+      });
+      if (!roomFound) {
+        const newRoomID = createRoom(false); //Bool for private rooms
+        cb(newRoomID);
+      }
+    })
+
+    socket.on('room:join', (roomID, cb) => {
+      const playerDetails = {
+        'playerID': socket.id,
+        'option': 'r',
+        'optionLock': false,
+      }
+      if (game[roomID]['players'].length < 2) {
+        game[roomID]['players'].push(playerDetails);
+        socket.join(roomID);
+        cb('ok');
+      } else {
+        cb('full');
+      }
+      console.log(game);
     });
 
     socket.on('room:create', (cb) => {
@@ -67,11 +75,21 @@ app.prepare().then(() => {
     });
 
     socket.on('room:leave', (roomID, userID, cb) => {
-      game[roomID].vacent = true;
-      const playerPos = game[roomID].players.indexOf(userID);
-      if (playerPos > -1) {
-        game[roomID].players.splice(playerPos, 1);
+      console.log('exiting Room: ' + roomID);
+      game[roomID]['vacent'] = true;
+      let position = 0;
+      for (let i = 0; i < game[roomID]['players'].length; i++) {
+        if (game[roomID]['players'][i]['playerID'] == userID) {
+          position = i;
+          break;
+        }
       }
+      game[roomID]['players'].splice(position, 1);
+      if (game[roomID]['players'].length == 0) {
+        delete game[roomID];
+      }
+      console.log('game Object');
+      console.log(game);
       cb();
     });
   });

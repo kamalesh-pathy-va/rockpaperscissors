@@ -42,11 +42,12 @@ export default function Home() {
   }, []);
 
   const handlePlayWithStranger = () => {
-    setInfo('Searching for players...');
+    // setInfo('Searching for players...');
 
-    socket.emit('room:join', (data: string) => {
-      router.push(`/room/${data}`);
-    });
+    // socket.emit('room:get', (data: string) => {
+    //   router.push(`/room/${data}`);
+    // });
+    router.push('/room/');
   };
   
   return (
