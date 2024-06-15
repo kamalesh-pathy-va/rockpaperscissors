@@ -10,6 +10,7 @@ const Page = () => {
   useEffect(() => {
     socket.emit('room:get', (data: string) => {
       router.push(`/room/${data}`);
+      // console.log("use effect called twice");
     });
   }, [router]);
 
