@@ -35,6 +35,33 @@ app.prepare().then(() => {
       return newRoomID;
     };
 
+    const joinRoom = (roomID, cb) => {
+      const playerDetails = {
+        'playerID': socket.id,
+        'option': 'r',
+        'optionLock': false,
+      }
+      if (game[roomID]['players'].length < 2) { //See if there is no more than 2 players.
+        if (game[roomID]['players'].length === 1 && game[roomID]['players'][0]['playerID'] != playerDetails['playerID']) { //If there is only one player and the new player id is not same as the already existing one
+          game[roomID]['players'].push(playerDetails); //add the player
+          socket.join(roomID);
+          cb('ok');
+        }
+        if (game[roomID]['players'].length === 0) { // If there are no players i.e Just created and waiting for the created user to join.
+          game[roomID]['players'].push(playerDetails);
+          socket.join(roomID);
+          cb('ok');
+        }
+      } else {
+        game[roomID]['players'].forEach(item => {
+          if (item['playerID'] == playerDetails['playerID']) {
+            cb('ingame');
+          }
+        })
+        cb('full');
+      }
+    }
+
     const leaveRoom = (userID, roomID) => {
       console.log('exiting Room: ' + roomID);
       if (game[roomID] !== undefined) {
@@ -55,6 +82,18 @@ app.prepare().then(() => {
       console.log(game);
     };
 
+    // if (socket.recovered) {
+    //   console.log('socket recovered');
+    //   if (socket.rooms.size == 2) {
+    //     const userID = socket.rooms.values().next().value;
+    //     const roomID = socket.rooms.values().next().value;
+    //     console.log('recovered id' + userID);
+    //     if (game[roomID] != undefined) {
+    //       joinRoom(roomID);
+    //     }
+    //   }
+    // }
+
     socket.on('room:get', (cb) => {
       let roomFound = false;
       Object.keys(game).forEach(key => {
@@ -74,25 +113,7 @@ app.prepare().then(() => {
     })
 
     socket.on('room:join', (roomID, cb) => {
-      const playerDetails = {
-        'playerID': socket.id,
-        'option': 'r',
-        'optionLock': false,
-      }
-      if (game[roomID]['players'].length < 2) {
-        if (game[roomID]['players'].length === 1 && game[roomID]['players'][0]['playerID'] != playerDetails['playerID']) {
-          game[roomID]['players'].push(playerDetails);
-          socket.join(roomID);
-          cb('ok');
-        }
-        if (game[roomID]['players'].length === 0) {
-          game[roomID]['players'].push(playerDetails);
-          socket.join(roomID);
-          cb('ok');
-        }
-      } else {
-        cb('full');
-      }
+      joinRoom(roomID, cb);
       console.log(game);
     });
 

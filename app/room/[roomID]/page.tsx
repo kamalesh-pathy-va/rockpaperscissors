@@ -2,10 +2,12 @@
 
 import { socket } from '@/socket';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const Page = ({ params }: { params: { roomID: string } }) => {
   const router = useRouter();
+  const [roomid, setRoomid] = useState(params.roomID);
+  const [userid, setUserid] = useState(socket.id);
 
   // useEffect(() => {
   //   socket.emit('room:join', params.roomID, (resStatus: string) => {
@@ -16,11 +18,35 @@ const Page = ({ params }: { params: { roomID: string } }) => {
   //   });
   // }, [params.roomID]);
 
+  useEffect(() => {
+    if (socket.connected) {
+      onConnect();
+    }
+
+    function onConnect() {
+      setUserid(socket.id);
+    };
+      
+    function onDisconnect() {
+      setTimeout(handleJoin, 1000);
+    }
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, []);
+
   const handleJoin = () => {
     socket.emit('room:join', params.roomID, (resStatus: string) => {
       if (resStatus == 'full') {
         alert('Room is full, try Play with a stranger')
         router.push('/');
+      } else if (resStatus == 'ingame') {
+        alert('Already in game');
       }
     });
   }
@@ -33,8 +59,8 @@ const Page = ({ params }: { params: { roomID: string } }) => {
 
   return (
     <div>
-      <p>roomID: {params.roomID}</p>
-      <p>userID: {socket.id}</p>
+      <p>roomID: {roomid}</p>
+      <p>userID: {userid}</p>
       <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={handleJoin}>Join and start</button>
       <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={handleBack}>Exit & go back</button>
     </div>

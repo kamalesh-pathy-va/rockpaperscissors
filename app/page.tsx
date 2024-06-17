@@ -25,6 +25,8 @@ export default function Home() {
       socket.io.engine.on("upgrade", (transport) => {
         setTransport(transport.name);
       });
+
+      // alert(socket.recovered);
     }
 
     function onDisconnect() {
