@@ -41,6 +41,21 @@ app.prepare().then(() => {
         'option': 'r',
         'optionLock': false,
       }
+
+      // game[roomID]['players'].forEach(player => {
+      //   if (player['playerID'] != playerDetails['playerID']) {
+      //     if (game[roomID]['players'].length < 2) {
+      //       game[roomID]['players'].push(playerDetails);
+      //       socket.join(roomID);
+      //       cb('ok');
+      //     } else {
+      //       cb('full');
+      //     }
+      //   } else {
+      //     cb('ingame');
+      //   }
+      // });
+
       if (game[roomID]['players'].length < 2) { //See if there is no more than 2 players.
         if (game[roomID]['players'].length === 1 && game[roomID]['players'][0]['playerID'] != playerDetails['playerID']) { //If there is only one player and the new player id is not same as the already existing one
           game[roomID]['players'].push(playerDetails); //add the player
@@ -125,6 +140,17 @@ app.prepare().then(() => {
     socket.on('room:leave', (roomID, userID, cb) => {
       leaveRoom(userID, roomID);
       cb();
+    });
+
+    socket.on('send:sampleMsg', (msg) => {
+      const sData = socket.rooms.values();
+      const userID = sData.next().value;
+      const room = sData.next().value;
+      if (room != undefined) {
+        io.to(room).except(userID).emit('get:sampleRes', msg);
+      } else {
+        io.to(userID).emit('get:sampleRes', 'not in room');
+      }
     });
 
     socket.on('disconnecting', () => {
