@@ -8,7 +8,6 @@ const Page = ({ params }: { params: { roomID: string } }) => {
   const router = useRouter();
   const [roomid, setRoomid] = useState(params.roomID);
   const [userid, setUserid] = useState(socket.id);
-  const [count, setCount] = useState(0);
   const [messageList, setMessageList] = useState<string[]>([]);
 
   // useEffect(() => {
@@ -59,14 +58,14 @@ const Page = ({ params }: { params: { roomID: string } }) => {
     });
   };
 
-  const sendMSG = () => {
-    socket.emit('send:sampleMsg', count);
-    setCount(prev => prev += 1);
+  const sendMSG = (msg:string) => {
+    socket.emit('send:sampleMsg', msg, roomid);
+    setMessageList([...messageList, "You: " + msg]);
   }
 
   useEffect(() => {
     socket.on('get:sampleRes', resp => {
-      setMessageList([...messageList, resp])
+      setMessageList([...messageList, "Opponent: " + resp]);
     });
   }, [messageList]);
 
@@ -76,10 +75,14 @@ const Page = ({ params }: { params: { roomID: string } }) => {
       <p>userID: {userid}</p>
       <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={handleJoin}>Join and start</button>
       <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={handleBack}>Exit & go back</button>
-      <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={sendMSG}>Send sample Message: {count}</button>
+      <div className='flex mt-4 w-1/3 mx-auto justify-between'>
+        <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={() => sendMSG('rock')}>Rock</button>
+        <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={() => sendMSG('paper')}>Paper</button>
+        <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={() => sendMSG('sissors')}>Sissors</button>
+      </div>
       <div>
         {
-          messageList?.map((item, index) => <div key={index}>{item}</div>)
+          messageList.map((item, index) => <div key={index}>{item}</div>)
         }
       </div>
     </div>

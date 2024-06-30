@@ -75,6 +75,8 @@ app.prepare().then(() => {
         })
         cb('full');
       }
+      console.log('joinRoom event');
+      console.log(game[roomID]['players']);
     }
 
     const leaveRoom = (userID, roomID) => {
@@ -142,12 +144,30 @@ app.prepare().then(() => {
       cb();
     });
 
-    socket.on('send:sampleMsg', (msg) => {
+    socket.on('send:sampleMsg', (msg, roomID) => {
       const sData = socket.rooms.values();
       const userID = sData.next().value;
       const room = sData.next().value;
-      if (room != undefined) {
-        io.to(room).except(userID).emit('get:sampleRes', msg);
+      if (game[roomID] != undefined) {
+        if (game[roomID]['players'].length == 2) {
+          console.log(game[roomID]['players']);
+          game[roomID]['players'].forEach(player => {
+            if (player['playerID'] == userID) {
+              player['option'] = msg;
+              player['optionLock'] = true;
+            }
+          });
+          if (game[roomID]['players'][0]['optionLock'] && game[roomID]['players'][1]['optionLock']) {
+            io.to(roomID).except(game[roomID]['players'][0]['playerID']).emit('get:sampleRes', game[roomID]['players'][0]['option']);
+            io.to(roomID).except(game[roomID]['players'][1]['playerID']).emit('get:sampleRes', game[roomID]['players'][1]['option']);
+            game[roomID]['players'][0]['optionLock'] = false;
+            game[roomID]['players'][1]['optionLock'] = false;
+          }
+        } else {
+          io.to(userID).emit('get:sampleRes', 'Opponet has left the game');
+          game[roomID]['players'][0]['optionLock'] = false;
+        }
+        // io.to(room).except(userID).emit('get:sampleRes', msg);
       } else {
         io.to(userID).emit('get:sampleRes', 'not in room');
       }
