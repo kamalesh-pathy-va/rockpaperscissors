@@ -9,7 +9,7 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
 
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState('Unknown User');
   const [info, setInfo] = useState('');
   const router = useRouter();
 
@@ -47,7 +47,7 @@ export default function Home() {
     setInfo('Searching for players...');
 
     socket.emit('room:get', (data: string) => {
-      router.push(`/room/${data}`);
+      router.push(`/room/${data}?username=${username}`);
     });
     // router.push('/room/');
   };

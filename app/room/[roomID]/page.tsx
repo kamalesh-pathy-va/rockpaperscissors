@@ -1,14 +1,17 @@
 'use client';
 
 import { socket } from '@/socket';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const Page = ({ params }: { params: { roomID: string } }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [roomid, setRoomid] = useState(params.roomID);
   const [userid, setUserid] = useState(socket.id);
   const [messageList, setMessageList] = useState<string[]>([]);
+  const username = searchParams.get('username');
 
   // useEffect(() => {
   //   socket.emit('room:join', params.roomID, (resStatus: string) => {
@@ -42,7 +45,7 @@ const Page = ({ params }: { params: { roomID: string } }) => {
   }, []);
 
   const handleJoin = () => {
-    socket.emit('room:join', params.roomID, (resStatus: string) => {
+    socket.emit('room:join', params.roomID, username, (resStatus: string) => {
       if (resStatus == 'full') {
         alert('Room is full, try Play with a stranger')
         // router.push('/');
@@ -64,8 +67,8 @@ const Page = ({ params }: { params: { roomID: string } }) => {
   }
 
   useEffect(() => {
-    socket.on('get:sampleRes', resp => {
-      setMessageList([...messageList, "Opponent: " + resp]);
+    socket.on('get:sampleRes', (resp, name) => {
+      setMessageList([...messageList, name + ": " + resp]);
     });
   }, [messageList]);
 
@@ -73,6 +76,7 @@ const Page = ({ params }: { params: { roomID: string } }) => {
     <div>
       <p>roomID: {roomid}</p>
       <p>userID: {userid}</p>
+      <p>username: {username}</p>
       <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={handleJoin}>Join and start</button>
       <button className="px-4 py-2 bg-neutral-600 rounded-md hover:bg-neutral-500" onClick={handleBack}>Exit & go back</button>
       <div className='flex mt-4 w-1/3 mx-auto justify-between'>

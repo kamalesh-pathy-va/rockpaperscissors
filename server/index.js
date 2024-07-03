@@ -35,8 +35,9 @@ app.prepare().then(() => {
       return newRoomID;
     };
 
-    const joinRoom = (roomID, cb) => {
+    const joinRoom = (roomID, player_name, cb) => {
       const playerDetails = {
+        'name': player_name,
         'playerID': socket.id,
         'option': 'r',
         'optionLock': false,
@@ -131,8 +132,8 @@ app.prepare().then(() => {
       }
     })
 
-    socket.on('room:join', (roomID, cb) => {
-      joinRoom(roomID, cb);
+    socket.on('room:join', (roomID, player_name, cb) => {
+      joinRoom(roomID, player_name, cb);
       console.log(game);
     });
 
@@ -160,8 +161,8 @@ app.prepare().then(() => {
             }
           });
           if (game[roomID]['players'][0]['optionLock'] && game[roomID]['players'][1]['optionLock']) {
-            io.to(roomID).except(game[roomID]['players'][0]['playerID']).emit('get:sampleRes', game[roomID]['players'][0]['option']);
-            io.to(roomID).except(game[roomID]['players'][1]['playerID']).emit('get:sampleRes', game[roomID]['players'][1]['option']);
+            io.to(roomID).except(game[roomID]['players'][0]['playerID']).emit('get:sampleRes', game[roomID]['players'][0]['option'], game[roomID]['players'][0]['name']);
+            io.to(roomID).except(game[roomID]['players'][1]['playerID']).emit('get:sampleRes', game[roomID]['players'][1]['option'], game[roomID]['players'][1]['name']);
             game[roomID]['players'][0]['optionLock'] = false;
             game[roomID]['players'][1]['optionLock'] = false;
           }
