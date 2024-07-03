@@ -29,7 +29,7 @@ app.prepare().then(() => {
       console.log('Called createRoom' + newRoomID);
       game[newRoomID] = {
         'players': [],
-        'vacent': true,
+        // 'vacent': true,
         'private': privateRoom,
       };
       return newRoomID;
@@ -82,15 +82,17 @@ app.prepare().then(() => {
     const leaveRoom = (userID, roomID) => {
       console.log('exiting Room: ' + roomID);
       if (game[roomID] !== undefined) {
-        game[roomID]['vacent'] = true;
-        let position = 0;
+        let position = -99;
         for (let i = 0; i < game[roomID]['players'].length; i++) {
           if (game[roomID]['players'][i]['playerID'] == userID) {
             position = i;
             break;
           }
         }
-        game[roomID]['players'].splice(position, 1);
+        if (position >= 0) {
+          game[roomID]['players'].splice(position, 1);
+          // game[roomID]['vacent'] = true;
+        }
         if (game[roomID]['players'].length == 0) {
           delete game[roomID];
         }
@@ -114,10 +116,10 @@ app.prepare().then(() => {
     socket.on('room:get', (cb) => {
       let roomFound = false;
       Object.keys(game).forEach(key => {
-        if (!game[key]['private'] && game[key]['vacent']) {
-          if (game[key]['players'].length > 0) {
-            game[key]['vacent'] = false;
-          }
+        if ((!game[key]['private']) && (game[key]['players'].length < 2)) {
+          // if (game[key]['players'].length == 2) {
+          //   game[key]['vacent'] = false;
+          // }
           roomFound = true;
           cb(key);
           return;
