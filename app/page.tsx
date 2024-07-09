@@ -44,6 +44,10 @@ export default function Home() {
   }, []);
 
   const handlePlayWithStranger = () => {
+    if (username == 'Unknown User' && username.length != 0) {
+      setInfo('Enter a name.');
+      return;
+    }
     setInfo('Searching for players...');
 
     socket.emit('room:get', (data: string) => {
